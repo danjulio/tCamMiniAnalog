@@ -1,0 +1,23 @@
+{
+    "project_name":       "bootloader",
+    "project_path":       "/Users/danjulio/esp/esp-idf/components/bootloader/subproject",
+    "build_dir":          "/Users/danjulio/work/thermal_camera/tCam/github/tCamMiniAnalog/firmware/build/bootloader",
+    "config_file":        "/Users/danjulio/work/thermal_camera/tCam/github/tCamMiniAnalog/firmware/sdkconfig",
+    "config_defaults":    "",
+    "app_elf":            "bootloader.elf",
+    "app_bin":            "bootloader.bin",
+    "git_revision":       "v4.4.4-439-gc25d92074e",
+    "target":             "esp32",
+    "rev":                "1",
+    "min_rev":            "100",
+    "max_rev":            "399",
+    "phy_data_partition": "",
+    "monitor_baud" :      "115200",
+    "monitor_toolprefix": "xtensa-esp32-elf-",
+    "config_environment" : {
+        "COMPONENT_KCONFIGS" : "/Users/danjulio/esp/esp-idf-v4.4/components/efuse/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/esp32/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/esp_common/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/esp_hw_support/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/esp_system/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/freertos/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/hal/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/log/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/newlib/Kconfig;/Users/danjulio/esp/esp-idf-v4.4/components/spi_flash/Kconfig",
+        "COMPONENT_KCONFIGS_PROJBUILD" : "/Users/danjulio/esp/esp-idf/components/bootloader/Kconfig.projbuild;/Users/danjulio/esp/esp-idf-v4.4/components/esp_rom/Kconfig.projbuild;/Users/danjulio/esp/esp-idf-v4.4/components/esptool_py/Kconfig.projbuild;/Users/danjulio/esp/esp-idf-v4.4/components/partition_table/Kconfig.projbuild"
+    },
+    "build_components" : [ "bootloader", "bootloader_support", "efuse", "esp32", "esp_common", "esp_hw_support", "esp_rom", "esp_system", "esptool_py", "freertos", "hal", "log", "main", "micro-ecc", "newlib", "partition_table", "soc", "spi_flash", "xtensa", "" ],
+    "build_component_paths" : [ "/Users/danjulio/esp/esp-idf/components/bootloader", "/Users/danjulio/esp/esp-idf-v4.4/components/bootloader_support", "/Users/danjulio/esp/esp-idf-v4.4/components/efuse", "/Users/danjulio/esp/esp-idf-v4.4/components/esp32", "/Users/danjulio/esp/esp-idf-v4.4/components/esp_common", "/Users/danjulio/esp/esp-idf-v4.4/components/esp_hw_support", "/Users/danjulio/esp/esp-idf-v4.4/components/esp_rom", "/Users/danjulio/esp/esp-idf-v4.4/components/esp_system", "/Users/danjulio/esp/esp-idf-v4.4/components/esptool_py", "/Users/danjulio/esp/esp-idf-v4.4/components/freertos", "/Users/danjulio/esp/esp-idf-v4.4/components/hal", "/Users/danjulio/esp/esp-idf-v4.4/components/log", "/Users/danjulio/esp/esp-idf/components/bootloader/subproject/main", "/Users/danjulio/esp/esp-idf/components/bootloader/subproject/components/micro-ecc", "/Users/danjulio/esp/esp-idf-v4.4/components/newlib", "/Users/danjulio/esp/esp-idf-v4.4/components/partition_table", "/Users/danjulio/esp/esp-idf-v4.4/components/soc", "/Users/danjulio/esp/esp-idf-v4.4/components/spi_flash", "/Users/danjulio/esp/esp-idf-v4.4/components/xtensa", "" ]
+}
