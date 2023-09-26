@@ -102,3 +102,5 @@
 1002	1071	1695742707911273730	/Users/danjulio/work/thermal_camera/tCam/github/tCamMiniAnalog/firmware/build/bootloader/.bin_timestamp	9ebcdc8132090f6e
 1071	1101	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	5d05f1dd64f46056
 1071	1101	0	/Users/danjulio/work/thermal_camera/tCam/github/tCamMiniAnalog/firmware/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	5d05f1dd64f46056
+3	29	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	5d05f1dd64f46056
+3	29	0	/Users/danjulio/work/thermal_camera/tCam/github/tCamMiniAnalog/firmware/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	5d05f1dd64f46056

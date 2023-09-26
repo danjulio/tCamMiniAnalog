@@ -1,60 +1,117 @@
-## tCam-Mini
-tCam-Mini was created using code from the tCam project and ended up being finished first.  It is a simple device, hardware-wise, consisting of an ESP32 WROVER module, USB UART for programming and debug, Lepton 3.0, 3.1R or 3.5 and supporting voltage regulators and oscillator.
+# tCam-Mini Alternate Firmware with Analog Video output
+The discovery of aquaticus' wonderful [ESP32 Composite Video Library](https://github.com/aquaticus/esp32_composite_video_lib) led to a quick hack of my own [tCam-Mini](https://github.com/danjulio/tCam/tree/main/tCam-Mini) firmware to create this version which forgoes Wifi or digital hardware communication for some old-school NTSC or PAL analog video output goodness.  Great to make an inexpensive thermal imaging camera to fly on your drone with a long-distance video transmitter.
 
-![tCam-Mini Front and Back](pictures/tcam_mini_pcb_r4.png)
+![Showing finger temperature on an NTSC monitor](pictures/tCamMiniRev4_fingers.png)
 
-(image courtesy of Group Gets)
+*(tCam-Mini with a cheap analog monitor)*
 
-Revision 4 of the PCB, along with FW 2.0 and beyond, introduces a new hardware expansion port that can be used by an external micro-controller or single-board computer to communicate with tCam-Mini directly instead of using WiFi.  It also has an I2C expansion port that is currently unused, a USB-C connector and surface-mount LED.
+The video library uses the ESP32 built-in DAC and I2S peripherals to generate a monochrome analog video signal that is capable of directly driving 1V p-p 75-ohm inputs.  This code uses it to drive a slightly larger voltage range enabling up to 128 gradations of intensity (versus the default 55 levels).  A simple 100 ohm resistor in series with the DAC output, in conjunction with the 75-ohm video impedance, scales the voltage appropriately.
 
-### Firmware
-The "Firmware" directory contains a V4.4.4 Espressif ESP32 IDF project for tCam-Mini. You should be able to build and load it into a camera using the IDF commands.  There are also a set of precompiled binaries in the "precompiled" sub-directory.  You can use the Espressif tool and instructions found in the "programming" directory in parallel to this one to load those into a camera without having to build the project.  You can also use the tCam Family Serial Updater tool to load current files from my website.
+The firmware has the following features.
 
-The precompiled firmware and Windows-based programming application can be downloaded directly from my [website](http://danjuliodesigns.com/products/tcam_mini.html) as well if you don't want to clone this entire repository.  The tCam Family Serial Updater tool can also be [downloaded](https://danjuliodesigns.com/products/tcam.html).
+1. Works with Lepton 3.0, 3.1R or 3.5.  Radiometric Leptons configured with AGC enabled for best image quality.  Gets the full 8.7 FPS possible from the Leptons.
+2. 320x240 pixel image display (linearly interpolated from Lepton 160x120 image).
+2. Optionally displays the 2x2 pixel spotmeter and spotmeter temperature in the center of the image for radiometric Leptons.
+3. Optionally displays min/max temperature location markers.
+4. Supports both white-hot and black-hot palettes.
+5. Supports setting emissivity.
+6. Supports both Imperial (°F) and Metric (°C) temperature readouts.
+7. Stores configurable operating parameters in ESP32 Non-volatile flash.
+8. Firmware may be re-compiled with reduced number of gradations to eliminate need for external 100-ohm resistor.
 
-Cameras running FW 2.0 and beyond can also use the over-the-air update capability in the Desktop application to load new firmware files.
+The firmware is designed to run on the Revision 4 tCam-Mini using two of the Slave IF port pins for video (the Mode input is used to select between NTSC and PAL video mode outputs).  You can buy a tCam-Mini from [Group Gets](https://store.groupgets.com/products/tcam-mini-rev4-wireless-streaming-thermal-camera-board).  The firmware may also be run on "home-built" cameras using a ESP32 WROVER module and Lepton break-out board (see below).
 
-This firmware also provides support for an ethernet interface using the built-in ESP32 MAC and an external PHY chip implemented with the tCam-POE PCB.  A GPIO pin is pulled low to indicate the firmware is running on the tCam-POE PCB.
+![tCam-Mini connections](pictures/tCamMiniRev4_connections.png)
 
-### Hardware
-The "Hardware" directory contains PCB and stencil Gerber files, a BOM and a schematic PDF.  These can be used to build a tCam-Mini on the PCB I designed.  Of course you can also buy a pre-assembled unit from [Group Gets](https://store.groupgets.com/products/tcam-mini) with or without the Lepton.  See below for instructions on building one from commonly available development boards.
+Note that a tCam-Mini flashed with this firmware no longer supports Wifi or works with tCam.  You can always flash it back however.
 
-Note: My interests are in radiometric thermography so I have focused primarily on the Lepton 3.5.  The Lepton 3.0 is supported starting with FW 2.0.  It should be possible for someone to modify my firmware source to work with the Lepton 2 and 2.5 models by modifying the task that reads the lepton (probably easiest to modify the code that reads the data and then just pixel-double it before handing it off to other tasks).  I will be happy to include a link to anyone else's clone of my code that supports these older Leptons.
+## Firmware
+The "firmware" directory contains a V4.4.4 Espressif ESP32 IDF project for the tCamMiniAnalog project. You should be able to build and load it into a camera using the IDF commands.  There are also a set of precompiled binaries in the "precompiled" sub-directory.  You can use the Espressif tool and instructions found below to load those into a camera without having to build the project.
 
-### Enclosures
-Three simple enclosure designs in included in this repository, One designed to be cut on a laser cutter and two designed to be 3D printed.
+### Building Firmware
+These instructions assume that the IDF is installed and configured in a shell window (instructions at Espressif's [Getting Started](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/get-started/index.html) web page).
 
-Github user [zharijs](https://github.com/zharijs) created a set of fantastic 3D printed enclosure designs, with and without GoPro™ mounts, that you can find in his [repo](https://github.com/zharijs/Enclosures/tree/main/tCam%20enclosure). He helpfully includes a BOM for extra hardware you'll need too.  Honestly, his enclosures are better than mine!
+#### Configure
+The project ```sdkconfig``` is preconfigured with options for the project.  These typically should not need to be changed but it is important to use these configuration items since some optimizations and specific IDF configuration changes have been made.
 
-![Zharijs Enclosure Body](pictures/zharijs_gopro_body.png)
+#### Build
 
-### Operation
-tCam-Mini is a command-based device.  It is designed for software running on another device to control it and receive responses and image data from it.  The software communicates with tCam-Mini via one of two ways depending on the polarity of the Mode input at boot.
+```idf.py build```
 
-1. Mode bit left disconnected (pulled high) configures communication via WiFi using a socket interface with commands, responses and images encoded as json packets.  Data is not encrypted so appropriate care should be taken.
-2. Mode bit low (grounded) configures communication via the Hardware Interface using a serial interface and a slave SPI interface.  Commands and responses are sent as json packets over the serial interface.  A new "image_ready" packet indicates that the controller can read an image from the SPI interface.
+#### Build and load
+Connect gCore to your computer and turn on.  It should enumerate as a USB serial device.  You will use the serial port device file name (Linux, OS X) or COM port (Windows) in the command below (PORT).
 
-The command interface is described in the firmware directory.
+```idf.py -p [PORT] flash```
 
-#### USB Port
-The USB Port provides a USB Serial interface supporting automatic ESP32 reset and boot-mode entry for programming.  It is also used for serial logging output by the ESP32 firmware (115,200 baud).
+or 
 
-#### Status Indicator
+```idf.py -p [PORT] flash monitor```
+
+to also open a serial connection after programming so you can see diagnostic messages printed by the firmware to the serial port (```idf.py -p [PORT] monitor``` to simply open a serial connection).
+
+#### Reconfigure project for resistor-less video output
+By default the project is configured to use a larger video output range requiring an external resistor to ensure a valid analog video voltage range.  The range may be reduced obviating the need for the resistor by using ```idf.py menuconfig``` to change the video output as shown below.  Select "Component config > Composite Video Configuration" and then deselect "Enable fullscale (2.36V) DAC output".  Save the new configuration and then recompile.
+
+![Reconfigure project](pictures/menuconfig_video.png)
+
+### Loading pre-compiled firmware
+There are two easy ways to load pre-compiled firmware into tCam-Mini without having to install the IDF and/or compile.
+
+1. Use the Espressif Windows-only programming tool to load the firmware binaries found in the ```precompiled``` directory here.
+2. You can also use the IDF command line tool ```esptool.py``` to load the firmware binaries at the locations shown below if you have it installed.
+
+| Binary File | Load Location |
+| --- | --- |
+| booloader.bin | 0x1000 |
+| partition-table.bin | 0x8000 |
+| tCamMiniAnalog.bin | 0x10000 |
+
+### Espressif Programming Tool setup
+You can download the Espressif Programming Tool [here](https://www.espressif.com/en/support/download/other-tools).  Assuming you have downloaded the binary files in the ```precompiled``` directory to your PC, you can use this software as follows.
+
+
+1. Connect tCam-Mini to your PC and turn it on.  After a few seconds Windows should recognize it as a serial device and assign a COM port to it (it is possible you will have to download and install the Silicon Labs [VCP driver](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)).
+2. Start the Espressif Programming Tool.
+3. Select the ESP32 device.
+4. Configure the software with the three binary files and programming locations as shown below.
+5. Select the COM port assigned to tCam-Mini.
+6. Press START to initiate programming.
+7. Once programming is complete, briefly unplug and then re-plug tCam-Mini to reset it.  The LED should light indicating the firmware is running (and a video image displayed if you also have an attached monitor).
+
+![Select ESP32](pictures/tool_selection.png)
+
+*(Selecting part type)*
+
+![Espressif Programming Tool setup](pictures/espressif_tool_setup.png)
+
+*(Programming tCam-Mini)*
+
+## Operation
+Before powering tCam-Mini, connect the video output as shown below.  Also include a jumper across the Mode and GND pins to select PAL video output if desired.  The jumper position is only sampled when tCam-Mini is powered on.
+
+![tCam-Mini connections](pictures/tcam_mini_video_output.png)
+
+tCamMiniAnalog should immediately display the following test image followed by a live thermal image.
+
+![tCam-Mini test image](pictures/test_image.png)
+*(Same test image for both NTSC and PAL outputs)*
+
+Note: The NTSC output is slightly over-scanned so you may notice that the outside parts of the image are chopped off.  Some monitors allow adjustment that can bring it all onscreen.  I also found my cheap little monitor would happily display the full PAL image as well.
+
+### USB Port
+The USB Port provides power and a USB Serial interface supporting automatic ESP32 reset and boot-mode entry for programming.  It is also used for serial logging output by the firmware (115,200 baud).
+
+#### Alternate Power
+You can power tCam-Mini through the Slave IF 5V and GND pins as well (just don't connect USB at the same time).  It will happily run on any voltage between 3.5 - 5.0V meaning you can connect it directly to a LiPo battery.  This also lets you construct a 3-wire cable assembly (Power - GND - Video) that may be easy to connect to various transmitters.
+
+### Status Indicator
 A dual-color (red/green) LED is used to communicate status.  Combinations of color and blinking patterns communicate various information.
 
 | Status Indicator | Meaning |
 | --- | --- |
 | Off or Dim | Firmware did not start |
-| Solid Red | Firmware is running: initializing and configuring the Lepton and WiFi (when configured to use WiFi) |
-| Blinking Yellow | WiFi AP Mode : No client connected to camera's WiFi |
-|  | WiFi Client Mode : Not connected to an AP |
-| Solid Yellow | WiFi AP Mode : Client connected to camera's WiFi |
-|  | WiFi Client Mode : Connected to an AP |
-| Solid Green | Wifi Mode : WiFi is connected and external software has connected via the socket interface |
-|  | Hardware Interface Mode : Camera is ready for operation |
-| Fast Blink Yellow | WiFi Reset in progress |
-| Alternating Red/Green | Over-the-air FW update has been requested.  Press the button to initiate the update |
-| Blinking Green | FW update in process (blinking my occur at irregular intervals as the Flash memory is written) |
+| Solid Yellow | Firmware has started and is performing initialization functions |
+| Solid Green | Firmware is running with no problems |
 | Series of Red Blinks | A fault has been detected.  The number of blinks indicate the fault type (see table below) |
 
 
@@ -65,44 +122,38 @@ A dual-color (red/green) LED is used to communicate status.  Combinations of col
 | 3 blinks | ESP32 static memory buffer allocation failed (potential PSRAM issue) |
 | 4 blinks | Lepton CCI communication failed (I2C interface) |
 | 5 blinks | Lepton VoSPI communication failed (SPI interface) |
-| 6 blinks | Internal network error occurred |
-| 7 blinks | Lepton VoSPI synchronization cannot be achieved |
-| 8 blinks | Over-the-air FW Update failed |
+| 6 blinks | Lepton VoSPI synchronization cannot be achieved |
 
 Additional start-up and fault information is available from the USB Serial interface.
 
-#### WiFi
-tCam-Mini can act as either an Access Point (creating its own WiFi network) or a client (connecting to an existing WiFi network).  WiFi is enabled when the Mode input is high (left floating) when tCam-Mini boots and operates in the 2.4 GHz band.  The camera acts as an Access Point (AP) by default.  It selects an SSID based on a unique MAC ID in the ESP32 with the form "tCam-Mini-HHHH" where "HHHH" are the last four hexadecimal digits of the MAC ID.  There is no password by default.  When acting as an Access Point, each tCam-Mini always has the same default IPV4 address (192.168.4.1).
+### Button
+The button is used to set various operating parameters.
 
-It can be reconfigured via a command (for example, from the desktop application) to act as a WiFi Client (STAtion mode) and connect to an existing WiFi network.  When configured as a WiFi Client, it can either get a DHCP served address from the network's router or it can also be reconfigured to have a fixed (static) IPV4 address.  Using a static address makes it easier to connect to tCam-Mini because you don't have to find out what DHCP address the router gave it.
+1. A short press selects between parameter values for a parameter type.
+2. A long press (hold > 3 seconds) selects the next parameter type.
 
-Currently only one device can connect to the camera at a time.
+The following three parameter types are implemented.
 
-Please see the set of instructions in the DesktopApp folder in this repository for connecting to tCam-Mini in either mode.
+1. Marker/Palette : Short presses select between four possible marker on/off and white-hot or black-hot palettes.
+2. Emissivity : Short presses select between a set of 23 possible emissivity values from 10% to 100%.
+3. Units : Short presses select between Imperial and Metric temperature unit display.
 
-#### WiFi Reset Button
-Pressing and holding the WiFi Reset Button for more than five seconds resets the WiFi interface back to the default AP mode.  The status indicator will blink a pattern indicating the reset has occurred (see below).
+For parameter types 2 and 3 the firmware displays the current value on-screen as shown below.  Parameter type 1 simply changes to current display.  Changed parameters are saved to NV Flash.  The on-screen parameter menu is displayed for up to 10 seconds after the last change.
 
-Pressing the button quickly when an OTA FW update has been requested (LED alternating red/green) by the Desktop application initiates the update process.
+![Emissivity Parameter setting](pictures/change_parm_emissivity.png)
 
-#### Hardware Interface
-The hardware interface is enabled when the Mode input is low (grounded) when tCam-Mini boots.
+## Building your own
+A camera can be constructed using an ESP32 development board, a few components and a Lepton breakout board from Group Gets.  The ESP32 development board must use the ESP32 WROVER module as it has the necessary external PSRAM the firmware requires.
 
-![tCam-Mini Hardware Interface](pictures/hw_if.png)
+Connections between the ESP32 and other devices are made through the GPIO pins documented in the "firmware/main/system_config.h" file.  Also take a look at the tCam-Mini schematic in the [hardware documents repo](https://github.com/danjulio/tCam/tree/main/tCam-Mini/hardware/documentation/rev_4).
 
-The serial port (running at 230,400 baud) is used to send and receive commands and responses as described below.  Instead of sending an "image" response over the relatively slow serial port, the firmware sends an "image_ready" response to notify software running on the external system that it can read the image from the slave SPI port using a master SPI peripheral.
+I originally built one of the first tCam-Mini prototypes around a TTGO V7 module.  To test this firmware I just soldered the video signals right to the module on my original prototype but it is probably best to include a connector in your build.
 
-The slave SPI port is partially handled by a driver running on the ESP32.  For this reason the highest supported clock rate is 8 MHz.  Too fast and the ESP32 slave SPI driver can't keep up.  I found success running the interface at 7 MHz.
+![TTGO camera](pictures/ttgo_tCamMini_hacked.png)
 
-#### mDNS Discovery
-The cameras advertise themselves on the local network using mDNS (Bonjour) starting with firmware revision 3.0 to make discovering their IPV4 addresses easier.
+A simplified wiring diagram is shown below.
 
-* Service Type: "\_tcam-socket._tcp."
-* Host/Instance Name: Camera Name (e.g. "tCam-Mini-87E9")
-* TXT Records:
-	1. "model": Camera model (e.g. "tCam", "tCam-Mini", "tCam-POE")
-	2. "interface": Communication interface (e.g. "Ethernet", "WiFi")
-	3. "version": Firmware version (e.g. "3.0")
+![TTGO wiring diagram](pictures/ttgo_based_tcam_analog.png)
 
-### Previous version
-![tCam-Mini Front and Back](pictures/tcam_mini_pcb_r2.png)
+## Contact me!
+Hey, I'd like to know if you use this code and if you built your own camera or used a tCam-Mini.  Like so many others, I happily put my work out in the wild.  It's sometimes nice to know if it's ever seen and used.  You can find contact info at my [website](https://danjuliodesigns.com).
